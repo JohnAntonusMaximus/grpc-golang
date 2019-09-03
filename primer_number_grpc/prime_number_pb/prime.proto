@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package prime;
+
+option go_package="prime";
+
+message PrimeStreamRequest {
+    int32 factor = 1;
+}
+
+message PrimeStreamResponse {
+    int32 result = 1;
+}
+
+
+service PrimeStreamService {
+    rpc GetPrimeFactors(PrimeStreamRequest) returns (stream PrimeStreamResponse){};
+}

@@ -8,31 +8,31 @@ import (
 	"strconv"
 	"time"
 
-	greetpb "github.com/johnantonusmaximus/grpc-course/greet_stream_server/greetstreampb"
+	"github.com/johnantonusmaximus/grpc-golang/greet_stream_server/greetstreampb"
 	"google.golang.org/grpc"
 )
 
 type server struct{}
 
-func (s *server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+func (s *server) Greet(ctx context.Context, req *greetstreampb.GreetRequest) (*greetstreampb.GreetResponse, error) {
 	fmt.Printf("Greet Called: %v\n", req)
 	firstName := req.GetGreeting().GetFirstName()
-	return &greetpb.GreetResponse{
+	return &greetstreampb.GreetResponse{
 		Result: "Hello " + firstName + "!",
 	}, nil
 }
 
-func (s *server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {
+func (s *server) GreetManyTimes(req *greetstreampb.GreetManyTimesRequest, stream greetstreampb.GreetService_GreetManyTimesServer) error {
 	firstName := req.GetGreeting().GetFirstName()
-	for i := 0; i < 20; i++ {
-		result := "Hello " + firstName + "! Number: " + strconv.Itoa(i)
-		res := &greetpb.GreetManyTimesResponse{
+	for i := 0; i < 10000; i++ {
+		result := "Hello " + firstName + "! #" + strconv.Itoa(i)
+		res := &greetstreampb.GreetManyTimesResponse{
 			Result: result,
 		}
 		stream.Send(res)
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Millisecond * 10)
 	}
-	return nil, nil
+	return nil
 }
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 
 	s := grpc.NewServer()
 
-	greetpb.RegisterGreetServiceServer(s, &server{})
+	greetstreampb.RegisterGreetServiceServer(s, &server{})
 
 	if err := s.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)

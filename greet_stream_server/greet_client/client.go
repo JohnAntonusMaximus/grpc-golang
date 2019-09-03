@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 
-	"github.com/johnantonusmaximus/grpc-course/greet/greetpb"
+	"github.com/johnantonusmaximus/grpc-golang/greet_stream_server/greetstreampb"
 	"google.golang.org/grpc"
 )
 
@@ -16,24 +18,38 @@ func main() {
 
 	defer conn.Close()
 
-	c := greetpb.NewGreetServiceClient(conn)
+	c := greetstreampb.NewGreetServiceClient(conn)
 
-	doUnary(c)
+	doStream(c)
 }
 
-func doUnary(c greetpb.GreetServiceClient) {
+func doStream(c greetstreampb.GreetServiceClient) {
 
-	ctx := context.Background()
-	req := &greetpb.GreetRequest{
-		Greeting: &greetpb.Greeting{
+	req := &greetstreampb.GreetManyTimesRequest{
+		Greeting: &greetstreampb.Greeting{
 			FirstName: "John",
 			LastName:  "Radosta",
 		},
 	}
 
-	resp, err := c.Greet(ctx, req)
+	ctx := context.Background()
+
+	resStream, err := c.GreetManyTimes(ctx, req)
 	if err != nil {
 		log.Fatalf("Greet RPC failed: %v ", err)
 	}
-	log.Printf("Response From Server: %v", resp)
+
+	for {
+		msg, err := resStream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error reading stream: %v ", err)
+		}
+		fmt.Printf("Stream: %v\n", msg.GetResult())
+	}
+
+	fmt.Println("Finished reading stream!")
+
 }
